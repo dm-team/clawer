@@ -1,12 +1,11 @@
 package com.dmteam.crawler;
 
-import com.dmteam.crawler.html.PageContext;
-import com.dmteam.crawler.html.PageSaver;
-import com.dmteam.crawler.html.UrlExtractor;
-import com.dmteam.crawler.html.Stopable;
+import com.dmteam.crawler.html.*;
 import com.dmteam.crawler.net.HttpPageFetcher;
 import com.dmteam.extractor.ArticleContentExtractor;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,86 +16,85 @@ import java.util.List;
  */
 public class Spider implements Runnable, Stopable {
 
+    static Logger logger = LoggerFactory.getLogger(Spider.class);
+
     private String rootUrl;
 
     private ArticleContentExtractor articleContentExtractor;
 
     private PageSaver saver;
 
-//    private ConcurrentHashMap<String, Object> visitUrl = new ConcurrentHashMap();
-
-    private VisitedTable vt;
+    private UrlStorage urlStorage;
 
     private HttpPageFetcher fetcher;
 
-    private int maxDepth = DEFAULT_DEPTH;
+    private PageAnalyzer pageAnalyzer;
 
-    private UrlExtractor urlExtractor;
+    private boolean stop;
 
-//    public static ExecutorService es = Executors.newFixedThreadPool(1);
-
-    public static final int DEFAULT_DEPTH = 5;
-
-    public Spider(String rootUrl, VisitedTable vt) {
+    public Spider(String rootUrl, UrlStorage urlStorage) {
         this.rootUrl = rootUrl;
-        this.vt = vt;
+        this.urlStorage = urlStorage;
     }
 
 
     public void goBfs() {
 
-        List<String> bfsUrls = new ArrayList<String>(1);
-        bfsUrls.add(rootUrl);
+        stop = false;
 
-        int curDepth = maxDepth;
-        while (curDepth > 0) {
-            System.out.println("curDepth: " + curDepth);
+        PageContext page = pageAnalyzer.extractInfo(rootUrl);
+        urlStorage.store(page);
 
-            List<String> tmpBfsUrls = new ArrayList<String>();
-            for (String url : bfsUrls) {
+        while (!stop) {
 
-                if (!vt.visit(url)) continue;
+            page = urlStorage.take();
 
+            // 如果取不到url，则等待
+            if (page == null)
                 try {
-                    System.out.println("current url: " + url);
+                    System.out.println("url storage empty, go sleep...");
+                    Thread.sleep(1000); continue;
+                } catch (InterruptedException e) {break;}
 
-                    String fetchHtml = fetcher.fetch(url);
-
-                    List<String> urls = urlExtractor.extractUrls(fetchHtml);
-
-                    tmpBfsUrls.addAll(urls);
-
-                    PageContext pc = new PageContext(url);
-
-                    String contentForSave = fetchHtml;
-                    if (articleContentExtractor != null) {
-                        contentForSave = articleContentExtractor.extract(fetchHtml);
-                    }
-                    if(StringUtils.isNotBlank(contentForSave)||contentForSave.length()>=30)
-                        saver.doSave(saver.generateFileName(pc), contentForSave);
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            bfsUrls = tmpBfsUrls;
-            curDepth--;
+            process(page);
         }
     }
 
-//    private boolean visit(String url) {
-//        if (null == visitUrl.putIfAbsent(url, 0)) return true;
-//        return false;
-//    }
+    private void process(PageContext pc) {
 
-    public Spider setMaxDepth(int d) {
-        this.maxDepth = d;
-        return this;
+        if (!urlStorage.visit(pc)) return;
+
+        try {
+            String fetchHtml = fetcher.fetch(pc.pageUrl);
+
+            List<PageContext> urls = pageAnalyzer.extractUrls(fetchHtml);
+
+            urlStorage.store(urls);
+
+
+            if (!pc.isArticle) return;
+
+
+            String contentForSave = fetchHtml;
+            if (articleContentExtractor != null) {
+                contentForSave = articleContentExtractor.extract(fetchHtml);
+            }
+
+            if(StringUtils.isNotBlank(contentForSave)) {
+
+                logger.info("Save file: " + pc.desFile.getAbsolutePath());
+
+                saver.doSave(pc, contentForSave);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public Spider setUrlExtractor(UrlExtractor u) {
-        this.urlExtractor = u;
+
+    public Spider setPageAnalyzer(PageAnalyzer u) {
+        this.pageAnalyzer = u;
         return this;
     }
 
@@ -117,7 +115,8 @@ public class Spider implements Runnable, Stopable {
 
     // TODO
     public void stop() {
-
+        stop = true;
+        Thread.currentThread().interrupt();
     }
 
     @Override

@@ -7,9 +7,9 @@ import java.io.IOException;
  */
 public interface PageSaver {
 
-    void setDir(String dir);
+    void setRootDir(String dir);
 
-    String generateFileName(PageContext context);
+    void generateFile(PageContext context);
 
-    void doSave(String pageFileName, String content) throws IOException;
+    void doSave(PageContext context, String content) throws IOException;
 }

@@ -25,8 +25,8 @@ public class HttpPageFetcher {
 
         URL getUrl = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
-        connection.setConnectTimeout(5000);
-        connection.setReadTimeout(5000);
+        connection.setConnectTimeout(50000);
+        connection.setReadTimeout(50000);
         connection.connect();
         BufferedReader reader = null;
 

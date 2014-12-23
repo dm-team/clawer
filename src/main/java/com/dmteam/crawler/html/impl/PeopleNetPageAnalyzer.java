@@ -1,8 +1,14 @@
 package com.dmteam.crawler.html.impl;
 
-import com.dmteam.crawler.html.UrlExtractor;
+import com.dmteam.crawler.html.PageAnalyzer;
+import com.dmteam.crawler.html.PageContext;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang.time.DateUtils;
 
+import java.io.File;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -13,8 +19,11 @@ import java.util.regex.Pattern;
 /**
  * Created by yak on 2014/12/15.
  */
-public class PeopleNetUrlExtractor extends UrlExtractor{
+public class PeopleNetPageAnalyzer implements PageAnalyzer {
     private static Pattern regexPattern = Pattern.compile("<a href=\"http://\\S*\"");
+
+    private static Pattern articleUrlPattern =
+            Pattern.compile("^(.*).people.com.cn/n/\\d{4}/\\d{4}/c\\d+-\\d{8}(-\\d+)?.html$");
 
     private static final Set<String> INTEREST_DOMAIN = new HashSet<String>();
 
@@ -27,18 +36,18 @@ public class PeopleNetUrlExtractor extends UrlExtractor{
                 "travel.people.com.cn","finance.people.com.cn",
                 "energy.people.com.cn","health.people.com.cn",
                 "house.people.com.cn","shipin.people.com.cn",
-                "ccnews.people.com.cn/","people.com.cn"
+                "ccnews.people.com.cn","people.com.cn"
 
         };
         for (String s : domains) INTEREST_DOMAIN.add(s);
     }
 
     @Override
-    public List<String> extractUrls(String source) {
+    public List<PageContext> extractUrls(String source) {
 
         Matcher matcher = regexPattern.matcher(source);
 
-        List<String> result = new ArrayList<String>();
+        List<PageContext> result = new ArrayList<PageContext>();
 
         while (matcher.find())//查找符合pattern的字符串
         {
@@ -50,8 +59,8 @@ public class PeopleNetUrlExtractor extends UrlExtractor{
 
             if (!isInterestDomain(s)) continue;
 
-            System.out.println(s);
-            result.add(s);
+
+            result.add(extractInfo(s));
         }
 
 
@@ -59,8 +68,35 @@ public class PeopleNetUrlExtractor extends UrlExtractor{
     }
 
     @Override
-    public List<String> extractUrls(InputStream source) {
+    public List<PageContext> extractUrls(InputStream source) {
         return null;
+    }
+
+    @Override
+    public PageContext extractInfo(String url) {
+
+        PageContext pageContext = new PageContext(url);
+        pageContext.isArticle = articleUrlPattern.matcher(url).matches();
+
+        if (!pageContext.isArticle) return pageContext;
+
+        String s = "people.com.cn/n/";
+        int p = url.indexOf(s) + s.length();
+
+        //http://theory.people.com.cn/n/2014/1222/c148980-26249744.html
+        url = url.substring(p);
+
+        String year = url.substring(0, 4);
+        String monthDate = url.substring(5, 9);
+
+        try {
+            pageContext.pageDate = DateUtils.parseDate(year+monthDate, new String[]{"yyyyMMdd"});
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return pageContext;
     }
 
     private boolean isInterestDomain(String s) {

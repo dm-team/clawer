@@ -1,5 +1,7 @@
 package com.dmteam.crawler.html;
 
+import org.apache.commons.lang.time.DateFormatUtils;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,18 +12,27 @@ import java.io.IOException;
  */
 public class SimplePageSaver implements PageSaver {
 
-    private String dir;
+    private File dirFile;
 
-//    private int serialNumber;
+    private File visitedDir;
 
     @Override
-    public void setDir(String dir) {
+    public void setRootDir(String dir) {
         if (dir.endsWith("/")) {
-            this.dir = dir;
+            this.dirFile = new File(dir.substring(0, dir.length() - 1));
         } else {
-            this.dir = dir + File.separator;
+            this.dirFile = new File(dir);
         }
-        File f = new File(dir);
+        File f = this.dirFile;
+        if (!f.exists()) {
+            f.mkdirs();
+        }else{
+            f.delete();
+            f.mkdirs();
+        }
+
+        visitedDir = new File(this.dirFile, "visited");
+        f = this.visitedDir;
         if (!f.exists()) {
             f.mkdirs();
         }else{
@@ -31,7 +42,7 @@ public class SimplePageSaver implements PageSaver {
     }
 
     @Override
-    public String generateFileName(PageContext pc) {
+    public void generateFile(PageContext pc) {
 
         String url = pc.pageUrl;
 
@@ -40,27 +51,26 @@ public class SimplePageSaver implements PageSaver {
         }
 
         url = url.replace("/", "_");
-        return url + ".txt";
+
+        if (!pc.isArticle) {
+            pc.desFile = new File(visitedDir, url);
+            return;
+        }
+
+        pc.desFile = new File(new File(this.dirFile, DateFormatUtils.format(pc.pageDate, "yyMM")), url);
     }
 
     @Override
-    public void doSave(String pageFileName, String content) throws IOException {
+    public void doSave(PageContext pc, String content) throws IOException {
 
         FileWriter fileWriter = null;
         try {
-            File f = new File(dir + pageFileName);
 
-           fileWriter = new FileWriter(f);
-            String pageUrl = pageFileName.substring(0,pageFileName.indexOf(".txt"));
-            pageUrl = pageUrl.replace("_","/");
-
-            fileWriter.write(pageUrl);
-
+            fileWriter = new FileWriter(pc.desFile);
             fileWriter.write(content);
 
         } finally {
             fileWriter.close();
         }
-
     }
 }

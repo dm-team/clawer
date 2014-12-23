@@ -37,6 +37,7 @@ public class PeopleExtractor implements ArticleContentExtractor {
             r.append(s).append("\n");
         }
 
+        if (r.length() < 30) return null;
         return r.toString();
     }
 
