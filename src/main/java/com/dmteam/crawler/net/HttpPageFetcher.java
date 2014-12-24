@@ -28,23 +28,36 @@ public class HttpPageFetcher {
         connection.setConnectTimeout(50000);
         connection.setReadTimeout(50000);
         connection.connect();
-        BufferedReader reader = null;
 
 
+        InputStreamReader reader = new InputStreamReader(connection.getInputStream(), charset);
         try {
-            reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), charset));
 
             StringBuilder sb = new StringBuilder();
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
+            char[] data = new char[1024];
+            int i;
+            while ((i=reader.read(data)) != -1) {
+                sb.append(data, 0, i);
             }
+
+
+
+
+
+//            reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), charset));
+//
+//            StringBuilder sb = new StringBuilder();
+//
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                sb.append(line).append("\n");
+//            }
 
             return sb.toString();
 
         } finally {
             if (reader != null) reader.close();
+            connection.disconnect();
         }
 
     }

@@ -1,5 +1,8 @@
 package com.dmteam;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -9,6 +12,8 @@ import java.util.Properties;
  */
 public class System {
 
+    public static Logger logger = LoggerFactory.getLogger(System.class);
+
     static Properties p = new Properties();
 
     static {
@@ -16,7 +21,7 @@ public class System {
             p.load(new FileInputStream(
                     java.lang.System.getProperty("user.dir") + "/config/config.properties"));
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("load config error", e);
         }
     }
 

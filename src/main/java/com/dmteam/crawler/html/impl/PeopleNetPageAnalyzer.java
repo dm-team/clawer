@@ -5,6 +5,8 @@ import com.dmteam.crawler.html.PageContext;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -20,12 +22,15 @@ import java.util.regex.Pattern;
  * Created by yak on 2014/12/15.
  */
 public class PeopleNetPageAnalyzer implements PageAnalyzer {
+
+    static Logger logger = LoggerFactory.getLogger(PeopleNetPageAnalyzer.class);
+
     private static Pattern regexPattern = Pattern.compile("<a href=\"http://\\S*\"");
 
     private static Pattern articleUrlPattern =
-            Pattern.compile("^(.*).people.com.cn/n/\\d{4}/\\d{4}/c\\d+-\\d{8}(-\\d+)?.html$");
+            Pattern.compile("^(.*).people.com.cn(/.+)?/n/\\d{4}/\\d{4}/c\\d+-\\d{8}(-\\d+)?.html$");
 
-    private static final Set<String> INTEREST_DOMAIN = new HashSet<String>();
+    public static final Set<String> INTEREST_DOMAIN = new HashSet<String>();
 
     static {
         String[] domains = new String[]{
@@ -36,7 +41,8 @@ public class PeopleNetPageAnalyzer implements PageAnalyzer {
                 "travel.people.com.cn","finance.people.com.cn",
                 "energy.people.com.cn","health.people.com.cn",
                 "house.people.com.cn","shipin.people.com.cn",
-                "ccnews.people.com.cn","people.com.cn"
+                "ccnews.people.com.cn","people.com.cn",
+                "edu.people.com.cn"
 
         };
         for (String s : domains) INTEREST_DOMAIN.add(s);
@@ -80,10 +86,10 @@ public class PeopleNetPageAnalyzer implements PageAnalyzer {
 
         if (!pageContext.isArticle) return pageContext;
 
-        String s = "people.com.cn/n/";
+        String s = "/n/";
         int p = url.indexOf(s) + s.length();
 
-        //http://theory.people.com.cn/n/2014/1222/c148980-26249744.html
+        //http://theory.people.com.cn/abc/n/2014/1222/c148980-26249744.html
         url = url.substring(p);
 
         String year = url.substring(0, 4);
@@ -93,7 +99,7 @@ public class PeopleNetPageAnalyzer implements PageAnalyzer {
             pageContext.pageDate = DateUtils.parseDate(year+monthDate, new String[]{"yyyyMMdd"});
 
         } catch (ParseException e) {
-            e.printStackTrace();
+            logger.error("Parse Date Exception", e);
         }
 
         return pageContext;
@@ -111,7 +117,7 @@ public class PeopleNetPageAnalyzer implements PageAnalyzer {
             s = s.substring(0, p);
         }
 
-        return INTEREST_DOMAIN.contains(s);
+        return s.contains("people.com.cn");
+//        return INTEREST_DOMAIN.contains(s);
     }
-
 }

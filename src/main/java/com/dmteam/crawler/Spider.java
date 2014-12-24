@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 /**
@@ -74,21 +74,25 @@ public class Spider implements Runnable, Stopable {
 
             if (!pc.isArticle) return;
 
+            if (pc.desFile.exists()) return;
 
             String contentForSave = fetchHtml;
             if (articleContentExtractor != null) {
                 contentForSave = articleContentExtractor.extract(fetchHtml);
             }
 
-            if(StringUtils.isNotBlank(contentForSave)) {
+            if (StringUtils.isNotBlank(contentForSave)) {
 
                 logger.info("Save file: " + pc.desFile.getAbsolutePath());
 
                 saver.doSave(pc, contentForSave);
             }
 
+        } catch (SocketTimeoutException ste) {
+            // TODO 超时如何处理？
+            logger.error("Timeout, url:" + pc.pageUrl, ste);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("spider process exception, url:" + pc.pageUrl, e);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.dmteam.crawler.html;
 
+import com.dmteam.*;
 import com.dmteam.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,7 @@ public class UrlStorage implements Stopable {
                 return false;
             }
         } catch (IOException e) {
-            System.out.println(file.getAbsolutePath());
-            e.printStackTrace();
+            logger.error(file.getAbsolutePath(), e);
             return false;
         }
 
@@ -116,7 +116,7 @@ public class UrlStorage implements Stopable {
         } catch (FileNotFoundException e) {
             return;
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            logger.error("recovery exception", ioe);
         }
 
         logger.info("UrlStorage end, " + urls.size() + " urls recoveried.");
@@ -146,7 +146,7 @@ public class UrlStorage implements Stopable {
                         }
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("backup exception", e);
                 } finally {
                     IOUtils.close(fw);
                 }
@@ -154,8 +154,9 @@ public class UrlStorage implements Stopable {
                 logger.info("url storage end save....");
 
             }
-//        }, 30, 30, TimeUnit.MINUTES);
-        }, 10, 10, TimeUnit.SECONDS);
+        }, Integer.valueOf(com.dmteam.System.get("url_storage_rate")),
+                Integer.valueOf(com.dmteam.System.get("url_storage_rate")),
+                TimeUnit.SECONDS);
     }
 
 
