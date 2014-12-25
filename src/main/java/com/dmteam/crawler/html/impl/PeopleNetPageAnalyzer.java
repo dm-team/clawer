@@ -117,7 +117,6 @@ public class PeopleNetPageAnalyzer implements PageAnalyzer {
             s = s.substring(0, p);
         }
 
-        return s.contains("people.com.cn");
-//        return INTEREST_DOMAIN.contains(s);
+        return s.contains(".people.com.cn");
     }
 }
