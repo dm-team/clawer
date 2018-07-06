@@ -7,6 +7,7 @@ import java.util.Map;
 
 /**
  * Created by Administrator on 2014/11/27.
+ * @since 1.6+
  */
 public class HtmlTools {
 

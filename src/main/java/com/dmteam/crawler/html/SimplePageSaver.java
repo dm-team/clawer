@@ -16,7 +16,6 @@ public class SimplePageSaver implements PageSaver {
 
     private File visitedDir;
 
-    @Override
     public void setRootDir(String dir) {
         if (dir.endsWith("/")) {
             this.dirFile = new File(dir.substring(0, dir.length() - 1));
@@ -41,7 +40,6 @@ public class SimplePageSaver implements PageSaver {
         }
     }
 
-    @Override
     public void generateFile(PageContext pc) {
 
         String url = pc.pageUrl;
@@ -60,7 +58,6 @@ public class SimplePageSaver implements PageSaver {
         pc.desFile = new File(new File(this.dirFile, DateFormatUtils.format(pc.pageDate, "yyMM")), url);
     }
 
-    @Override
     public void doSave(PageContext pc, String content) throws IOException {
 
         FileWriter fileWriter = null;

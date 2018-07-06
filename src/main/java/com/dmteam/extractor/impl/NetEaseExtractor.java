@@ -2,6 +2,7 @@ package com.dmteam.extractor.impl;
 
 import com.dmteam.extractor.ArticleContentExtractor;
 import com.dmteam.utils.HtmlTools;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -20,7 +21,7 @@ public class NetEaseExtractor implements ArticleContentExtractor {
 
         String ctt = HtmlTools.extractTag(rawContent, "<div id=\"endText\"", "div");
 
-        if (ctt.isEmpty()) return ctt;
+        if (StringUtils.isEmpty(ctt)) return ctt;
 
         List<String> strings = HtmlTools.extractContentByTagName(ctt, "p");
 

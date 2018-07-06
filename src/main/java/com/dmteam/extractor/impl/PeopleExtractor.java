@@ -2,6 +2,7 @@ package com.dmteam.extractor.impl;
 
 import com.dmteam.extractor.ArticleContentExtractor;
 import com.dmteam.utils.HtmlTools;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -17,9 +18,8 @@ public class PeopleExtractor implements ArticleContentExtractor {
 
     public String extract(String rawContent) {
         String ctt = HtmlTools.extractTag(rawContent, "<div id=\"p_content\"", "div");
-
-        if (ctt.isEmpty()) return ctt;
-
+        ctt.isEmpty();
+        if (StringUtils.isEmpty(ctt)) return ctt;
         // p标签 大小写
         List<String> strings = HtmlTools.extractContentByTagName(ctt, "p");
         strings.addAll(HtmlTools.extractContentByTagName(ctt, "P"));

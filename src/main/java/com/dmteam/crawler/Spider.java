@@ -123,7 +123,6 @@ public class Spider implements Runnable, Stopable {
         Thread.currentThread().interrupt();
     }
 
-    @Override
     public void run() {
         goBfs();
     }

@@ -48,7 +48,6 @@ public class PeopleNetPageAnalyzer implements PageAnalyzer {
         for (String s : domains) INTEREST_DOMAIN.add(s);
     }
 
-    @Override
     public List<PageContext> extractUrls(String source) {
 
         Matcher matcher = regexPattern.matcher(source);
@@ -73,12 +72,10 @@ public class PeopleNetPageAnalyzer implements PageAnalyzer {
         return result;
     }
 
-    @Override
     public List<PageContext> extractUrls(InputStream source) {
         return null;
     }
 
-    @Override
     public PageContext extractInfo(String url) {
 
         PageContext pageContext = new PageContext(url);
